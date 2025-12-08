@@ -1,0 +1,222 @@
+WAGWAN – Full Platform Documentation
+A Malawi-first streaming platform built to allow viewers to subscribe and gift their favorite creators using local payments.
+
+1. Overview
+Wagwan is a live-streaming and creator monetization platform built for the Malawian and African market. The platform solves the biggest problem African streamers face: they cannot monetize effectively on global platforms because local currencies and payment systems are not supported.
+Wagwan provides:
+	•	Local subscriptions using PayChangu, Airtel Money, TNM Mpamba
+	•	Virtual gifting (coins → gifts)
+	•	Creator payouts in MWK
+	•	Affordable viewer-friendly pricing
+	•	Streamer-first revenue split
+Wagwan is NOT built to compete with Twitch on advanced features. The mission is simple, local, and profitable for creators.
+
+2. Core Features
+2.1 Viewer Features
+	•	Watch livestreams
+	•	Live chat
+	•	Buy coins
+	•	Send gifts to creators
+	•	Subscribe monthly to creators
+	•	Join PPV events
+	•	Follow streamers
+	•	Create user profile
+2.2 Creator Features
+	•	Go live
+	•	Schedule live streams
+	•	Track earnings (subscriptions, gifts, PPV)
+	•	Withdraw earnings to mobile money or bank
+	•	Manage stream title, tags, category
+	•	Moderate chat (ban/mute users)
+	•	View analytics: viewers, followers, earnings
+2.3 Admin Features
+	•	Manage creators
+	•	Approve KYC
+	•	Monitor payouts
+	•	Manage categories and tags
+	•	Review reports and flagged streams
+	•	View revenue and financial ledger
+
+3. Branding (Wagwan)
+3.1 Brand Meaning
+"Wagwan" means “what’s going on?”
+It represents:
+	•	youth
+	•	energy
+	•	vibe
+	•	community
+	•	authenticity
+Perfect fit for a streaming culture app.
+3.2 Tone
+	•	Friendly
+	•	Modern
+	•	Afro-urban
+	•	Energetic and bold
+
+4. Monetization System
+Wagwan prioritizes simple and predictable revenue models.
+4.1 Subscriptions
+Three tiers:
+	•	Basic – MK 1,500
+	•	Super Fan – MK 3,000
+	•	VIP – MK 7,000
+Creator Earns: 75% Platform Earns: 25%
+4.2 Coins (Virtual Currency)
+Buy coin packs using PayChangu:
+	•	MK 300 → 30 coins
+	•	MK 1,000 → 120 coins
+	•	MK 2,500 → 350 coins
+	•	MK 5,000 → 800 coins
+	•	MK 10,000 → 1,800 coins
+Gifts → convert coins to MK for creators
+Creator Earns: 65% of gift value Platform Earns: 35%
+4.3 PPV (Pay-Per-View)
+Creators can host special paid shows:
+	•	MK 500
+	•	MK 1,000
+	•	MK 2,000
+Creator Earns: 70% Platform Earns: 30%
+4.4 Ads (Optional)
+	•	Banner ads
+	•	Pre-roll
+Revenue split: 50/50
+
+5. Payment Integrations
+Primary: PayChangu Fallback:
+	•	Airtel Money
+	•	TNM Mpamba
+	•	National Bank
+	•	FDH Mobile Wallet
+5.1 PayChangu Uses
+	•	Subscription payments
+	•	Coin purchases
+	•	PPV purchases
+	•	Payouts to creators (if supported)
+5.2 Webhooks
+PayChangu sends webhooks for:
+	•	payment.success
+	•	payment.failed
+	•	payout.success
+
+6. Architecture Overview
+6.1 Tech Stack
+	•	Frontend: React Native (mobile), React (web)
+	•	Backend: Node.js (NestJS or Express)
+	•	Database: PostgreSQL (via Supabase or RDS)
+	•	Streaming: Livepeer (cheap, scalable) + Cloudflare CDN
+	•	Auth: Supabase Auth
+	•	Storage: S3-compatible
+6.2 System Diagram
+	1	User interacts with app → backend API
+	2	Backend interacts with DB and streaming provider
+	3	Payments handled by PayChangu
+	4	Webhooks update wallet balances and transactions
+
+7. Database Schema (Simplified)
+Tables
+	•	users
+	•	creators
+	•	streams
+	•	subscriptions
+	•	coin_purchases
+	•	gifts
+	•	transactions
+	•	payouts
+	•	categories
+	•	stream_reports
+Each table stores all actions for transparency and audit.
+
+8. User Flow
+8.1 Viewer Flow
+	1	Open app
+	2	Browse streams
+	3	Join a live
+	4	Chat / follow
+	5	Buy coins → PayChangu
+	6	Send gift
+	7	Subscribe to creator
+8.2 Creator Flow
+	1	Apply for creator profile
+	2	Get approved (KYC)
+	3	Go live
+	4	Receive gifts & subs
+	5	Track earnings
+	6	Request payout
+
+9. Earnings & Payouts
+Creators see:
+	•	total earnings
+	•	pending balance
+	•	available balance
+Funds move pending → available after 7–14 days.
+Payouts sent to:
+	•	Airtel Money
+	•	TNM Mpamba
+	•	Bank
+
+10. Anti-Fraud Systems
+	•	verify payments via webhook signature
+	•	14-day hold period
+	•	KYC verification
+	•	report system for streams
+	•	AI or manual monitoring for scams or crimes
+
+11. Admin Dashboard
+Admin can:
+	•	view all creators
+	•	approve/reject KYC
+	•	disable users
+	•	suspend streams
+	•	send payouts
+	•	export financial reports
+
+12. UI/UX Guidelines
+	•	clean and youthful
+	•	purple, blue, or warm neon color palette
+	•	focus on chat + gifts button
+	•	big Subscribe button in stream
+	•	coin purchase menu easily accessible
+
+13. Notifications
+Push notifications for:
+	•	creator going live
+	•	subscription renewal
+	•	coin purchase success
+	•	payout sent
+
+14. Roadmap
+Phase 1 – MVP
+	•	live streaming
+	•	gifting
+	•	subscriptions
+	•	payouts manual
+	•	basic analytics
+Phase 2 – Premium
+	•	in-app PPV events
+	•	advanced analytics
+	•	creator marketplace
+	•	automatic payouts
+Phase 3 – Expansion
+	•	Zambia & Tanzania rollout
+	•	smart recommendations
+	•	brand partnerships
+
+15. Security
+	•	encrypted JWTs
+	•	secure webhook validations
+	•	SSL enforced
+	•	access logs
+	•	prevent replay attacks
+
+16. Legal & Policy
+Must include:
+	•	Content Policy
+	•	Community Guidelines
+	•	Refund Policy
+	•	Payout Terms
+	•	Privacy Policy
+All creators must accept terms before earning.
+
+17. Conclusion
+Wagwan is designed as a powerful, simple, and locally focused streaming platform. With local payments, fair revenue splits, and creator-first design, it positions itself as the Malawian and African solution to Twitch monetization barriers.
+The focus remains clear: Let creators earn. Let fans support. Let the community grow.
