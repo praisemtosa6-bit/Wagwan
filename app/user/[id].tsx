@@ -30,6 +30,7 @@ export default function PublicProfileScreen() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Home');
     const [isFollowing, setIsFollowing] = useState(false);
+    const [followerStats, setFollowerStats] = useState({ followers: 0, following: 0 });
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -41,6 +42,10 @@ export default function PublicProfileScreen() {
                     // Check if current user is following this profile
                     const followStatus = await api.checkFollowStatus(currentUser.id, id);
                     setIsFollowing(followStatus.isFollowing);
+
+                    // Fetch follower/following counts
+                    const stats = await api.getUserStats(id);
+                    setFollowerStats(stats);
                 } catch (err) {
                     console.error("Failed to fetch user", err);
                 } finally {
@@ -51,6 +56,10 @@ export default function PublicProfileScreen() {
                 try {
                     const data = await api.getUser(id);
                     setProfileUser(data);
+
+                    // Fetch follower/following counts
+                    const stats = await api.getUserStats(id);
+                    setFollowerStats(stats);
                 } catch (err) {
                     console.error("Failed to fetch user", err);
                 } finally {
@@ -72,6 +81,10 @@ export default function PublicProfileScreen() {
                 await api.followUser(currentUser.id, profileUser.id);
                 setIsFollowing(true);
             }
+
+            // Refresh follower stats
+            const stats = await api.getUserStats(profileUser.id);
+            setFollowerStats(stats);
         } catch (error) {
             console.error('Failed to toggle follow:', error);
         }
@@ -161,11 +174,11 @@ export default function PublicProfileScreen() {
 
                     {/* Stats Row */}
                     <View style={styles.statsRow}>
-                        {renderStat('Followers', '125K')}
+                        {renderStat('Followers', followerStats.followers.toString())}
                         <View style={styles.statDivider} />
-                        {renderStat('Following', '42')}
+                        {renderStat('Following', followerStats.following.toString())}
                         <View style={styles.statDivider} />
-                        {renderStat('Subs', '1.2K')}
+                        {renderStat('Subs', '0')}
                     </View>
 
                     {/* Main Actions */}

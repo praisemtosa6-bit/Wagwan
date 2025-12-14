@@ -138,6 +138,34 @@ app.get('/follows/:followerId/:followingId', async (c) => {
     }
 });
 
+// Get follower/following counts for a user
+app.get('/users/:id/stats', async (c) => {
+    const userId = c.req.param('id');
+
+    try {
+        const { follows } = await import('./schema');
+        const { sql } = await import('drizzle-orm');
+
+        // Count followers (people following this user)
+        const followersResult = await db.select({ count: sql<number>`count(*)` })
+            .from(follows)
+            .where(eq(follows.followingId, userId));
+
+        // Count following (people this user follows)
+        const followingResult = await db.select({ count: sql<number>`count(*)` })
+            .from(follows)
+            .where(eq(follows.followerId, userId));
+
+        return c.json({
+            followers: Number(followersResult[0]?.count || 0),
+            following: Number(followingResult[0]?.count || 0),
+        });
+    } catch (error) {
+        console.error('Error fetching user stats:', error);
+        return c.json({ error: 'Failed to fetch user stats' }, 500);
+    }
+});
+
 
 export default app;
 

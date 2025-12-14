@@ -10,6 +10,7 @@ export interface User {
     avatarUrl?: string | null;
     bio?: string | null;
     isStreamer: boolean;
+    isVerified?: boolean;
     createdAt: string;
 }
 
@@ -76,6 +77,11 @@ export const api = {
 
     checkFollowStatus: async (followerId: string, followingId: string): Promise<{ isFollowing: boolean }> => {
         const res = await fetch(`${API_URL}/follows/${followerId}/${followingId}`);
+        return res.json();
+    },
+
+    getUserStats: async (userId: string): Promise<{ followers: number; following: number }> => {
+        const res = await fetch(`${API_URL}/users/${userId}/stats`);
         return res.json();
     },
 

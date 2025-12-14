@@ -18,8 +18,14 @@ export function resolveAvatar(url?: string | null): any {
         // Fallback if null
         return AVATARS['asset:pfp'];
     }
+    // Check if it's a remote URL (Clerk, etc.)
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return { uri: url };
+    }
+    // Check if it's a local asset
     if (url.startsWith('asset:')) {
         return AVATARS[url] || AVATARS['asset:pfp'];
     }
+    // Default fallback
     return { uri: url };
 }
