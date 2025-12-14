@@ -165,7 +165,6 @@ app.get('/users/:id/stats', async (c) => {
         return c.json({ error: 'Failed to fetch user stats' }, 500);
     }
 });
-});
 
 // LiveKit token generation
 import { AccessToken } from 'livekit-server-sdk';
