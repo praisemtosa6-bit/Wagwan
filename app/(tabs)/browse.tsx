@@ -1,0 +1,389 @@
+import { Ionicons } from '@expo/vector-icons';
+import { ResizeMode, Video } from 'expo-av';
+import { Link } from 'expo-router';
+import React, { useState } from 'react';
+import { Dimensions, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const { width } = Dimensions.get('window');
+const COLUMN_COUNT = 2;
+const ITEM_WIDTH = (width - 48) / COLUMN_COUNT; // 16px padding on sides + 16px gap
+
+const CATEGORIES = [
+    { id: '1', name: 'Just Chatting', viewers: '463K', image: require('../../assets/images/categories/just_chatting.png'), tags: ['IRL'] },
+    { id: '2', name: 'Fortnite', viewers: '120K', image: require('../../assets/images/categories/fortnite.png'), tags: ['Shooter', 'FPS'] },
+    { id: '3', name: 'League of Legends', viewers: '95K', image: require('../../assets/images/categories/league_of_legends.avif'), tags: ['MOBA'] },
+    { id: '4', name: 'Valorant', viewers: '80K', image: require('../../assets/images/categories/valorant.png'), tags: ['FPS', 'Shooter'] },
+    { id: '5', name: 'Call of Duty', viewers: '60K', image: require('../../assets/images/categories/cod.webp'), tags: ['FPS'] },
+    { id: '6', name: 'Minecraft', viewers: '45K', image: require('../../assets/images/categories/minecraft.png'), tags: ['Simulation'] },
+    { id: '7', name: 'Malawian Music', viewers: '15K', image: require('../../assets/images/categories/malawian-music.jpg'), tags: ['Music', 'Culture'] },
+];
+
+const LIVE_CHANNELS = [
+    {
+        id: '1',
+        streamer: 'shipmark',
+        title: '24 hours live stream',
+        game: 'Just Chatting',
+        viewers: '23K',
+        video: require('../../assets/Download.mp4'),
+        avatar: 'https://via.placeholder.com/40',
+    },
+    {
+        id: '2',
+        streamer: 'voodo skates',
+        title: 'random title',
+        game: 'irl',
+        viewers: '12K',
+        video: require('../../assets/Download_1.mp4'),
+        avatar: 'https://via.placeholder.com/40',
+    },
+];
+
+export default function BrowseScreen() {
+    const [activeTab, setActiveTab] = useState('Categories');
+
+    const renderCategoryItem = ({ item }: { item: typeof CATEGORIES[0] }) => (
+        <View style={styles.categoryCard}>
+            <Image source={item.image} style={styles.categoryImage} />
+            <View style={styles.categoryInfo}>
+                <Text style={styles.categoryTitle} numberOfLines={1}>{item.name}</Text>
+                <View style={styles.viewerRow}>
+                    <View style={styles.redDot} />
+                    <Text style={styles.viewerCount}>{item.viewers}</Text>
+                </View>
+                <View style={styles.tagsRow}>
+                    {item.tags.map((tag: string, index: number) => (
+                        <View key={index} style={styles.tagPill}>
+                            <Text style={styles.tagText}>{tag}</Text>
+                        </View>
+                    ))}
+                </View>
+            </View>
+        </View>
+    );
+
+    const renderLiveChannelItem = ({ item }: { item: typeof LIVE_CHANNELS[0] }) => (
+        <Link href={`/stream/${item.id}`} asChild>
+            <TouchableOpacity style={styles.streamCard} activeOpacity={0.9}>
+                {/* Video Preview */}
+                <View style={styles.videoContainer}>
+                    <Video
+                        style={styles.video}
+                        source={item.video}
+                        resizeMode={ResizeMode.COVER}
+                        isLooping
+                        shouldPlay
+                        isMuted={true}
+                    />
+                    <View style={styles.liveBadge}>
+                        <Text style={styles.liveText}>LIVE</Text>
+                    </View>
+                    <View style={styles.viewerCountBadge}>
+                        <Text style={styles.viewerText}>{item.viewers} viewers</Text>
+                    </View>
+                </View>
+
+                {/* Stream Info Panel */}
+                <View style={styles.streamInfo}>
+                    <View style={styles.infoTopRow}>
+                        <View style={styles.streamerDetails}>
+                            <Image source={{ uri: item.avatar }} style={styles.avatar} />
+                            <Text style={styles.streamerName}>{item.streamer}</Text>
+                            <Ionicons name="checkmark-circle" size={16} color="#f0ede4" style={{ marginLeft: 4 }} />
+                        </View>
+                        <View style={styles.infoActions}>
+                            <TouchableOpacity style={styles.followButton}>
+                                <Ionicons name="heart-outline" size={16} color="white" style={{ marginRight: 4 }} />
+                                <Text style={styles.followText}>Follow</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity>
+                                <Ionicons name="ellipsis-vertical" size={20} color="#efeff1" style={{ marginLeft: 10 }} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    <Text style={styles.streamTitle} numberOfLines={2}>
+                        {item.title}
+                    </Text>
+
+                    <TouchableOpacity style={styles.gameTag}>
+                        <Text style={styles.gameTagText}>{item.game}</Text>
+                    </TouchableOpacity>
+                </View>
+            </TouchableOpacity>
+        </Link>
+    );
+
+    return (
+        <SafeAreaView style={styles.container} edges={['top']}>
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+                <View style={styles.searchBar}>
+                    <Ionicons name="search" size={20} color="#888" style={{ marginRight: 8 }} />
+                    <TextInput
+                        placeholder="Search"
+                        placeholderTextColor="#888"
+                        style={styles.searchInput}
+                    />
+                </View>
+            </View>
+
+            {/* Category Tabs */}
+            <View style={styles.tabsHeader}>
+                <View style={styles.tabsRow}>
+                    <TouchableOpacity onPress={() => setActiveTab('Categories')} style={styles.tabButton}>
+                        <Text style={[styles.tabText, activeTab === 'Categories' && styles.tabTextActive]}>Categories</Text>
+                        {activeTab === 'Categories' && <View style={styles.activeIndicator} />}
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setActiveTab('Live Channels')} style={styles.tabButton}>
+                        <Text style={[styles.tabText, activeTab === 'Live Channels' && styles.tabTextActive]}>Live Channels</Text>
+                        {activeTab === 'Live Channels' && <View style={styles.activeIndicator} />}
+                    </TouchableOpacity>
+                </View>
+                <TouchableOpacity>
+                    <Ionicons name="filter" size={20} color="#efeff1" />
+                </TouchableOpacity>
+            </View>
+
+            {/* Content */}
+            {activeTab === 'Categories' ? (
+                <FlatList
+                    key="categories-grid"
+                    data={CATEGORIES}
+                    renderItem={renderCategoryItem}
+                    keyExtractor={(item) => item.id}
+                    numColumns={COLUMN_COUNT}
+                    contentContainerStyle={styles.gridContent}
+                    columnWrapperStyle={styles.gridRow}
+                    showsVerticalScrollIndicator={false}
+                />
+            ) : (
+                <FlatList
+                    key="live-channels-list"
+                    data={LIVE_CHANNELS}
+                    renderItem={renderLiveChannelItem}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#000000',
+    },
+    searchContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#000000',
+    },
+    searchBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1f1f23',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        height: 40,
+    },
+    searchInput: {
+        flex: 1,
+        color: 'white',
+        fontSize: 16,
+    },
+    tabsHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        marginBottom: 10,
+    },
+    tabsRow: {
+        flexDirection: 'row',
+        gap: 24,
+    },
+    tabButton: {
+        paddingVertical: 10,
+    },
+    tabText: {
+        color: '#888',
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    tabTextActive: {
+        color: '#f0ede4', // Secondary
+        fontWeight: 'bold',
+    },
+    activeIndicator: {
+        height: 3,
+        backgroundColor: '#f0ede4', // Secondary
+        width: '100%',
+        marginTop: 4,
+        borderRadius: 2,
+    },
+    gridContent: {
+        padding: 16,
+    },
+    listContent: {
+        paddingBottom: 20,
+    },
+    gridRow: {
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    categoryCard: {
+        width: ITEM_WIDTH,
+    },
+    categoryImage: {
+        width: '100%',
+        height: ITEM_WIDTH * 1.3, // Aspect ratio roughly 3:4
+        borderRadius: 6,
+        marginBottom: 8,
+        backgroundColor: '#333',
+    },
+    categoryInfo: {
+        gap: 4,
+    },
+    categoryTitle: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    viewerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    redDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: 'red',
+        marginRight: 6,
+    },
+    viewerCount: {
+        color: '#adadb8',
+        fontSize: 12,
+    },
+    tagsRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 4,
+        marginTop: 4,
+    },
+    tagPill: {
+        backgroundColor: '#323239',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    tagText: {
+        color: '#adadb8',
+        fontSize: 10,
+        fontWeight: '600',
+    },
+    // Stream Card Styles
+    streamCard: {
+        marginBottom: 20,
+    },
+    videoContainer: {
+        width: width,
+        height: 220,
+        backgroundColor: '#000',
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    video: {
+        width: '100%',
+        height: '100%',
+    },
+    liveBadge: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        backgroundColor: '#e91916',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    liveText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 12,
+    },
+    viewerCountBadge: {
+        position: 'absolute',
+        bottom: 10,
+        left: 10,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+    viewerText: {
+        color: 'white',
+        fontSize: 12,
+    },
+    streamInfo: {
+        padding: 12,
+    },
+    infoTopRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    streamerDetails: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    avatar: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        marginRight: 8,
+    },
+    streamerName: {
+        color: '#f0ede4',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    infoActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    followButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0ede4', // Secondary
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 16,
+    },
+    followText: {
+        color: '#014743', // Primary
+        fontWeight: 'bold',
+        fontSize: 12,
+    },
+    streamTitle: {
+        color: '#f0ede4',
+        fontSize: 14,
+        lineHeight: 20,
+        marginBottom: 8,
+    },
+    gameTag: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#26262c',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    gameTagText: {
+        color: '#adadb8',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+});
