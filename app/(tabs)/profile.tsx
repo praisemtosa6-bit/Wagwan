@@ -31,6 +31,7 @@ export default function ProfileScreen() {
     const [bio, setBio] = useState('');
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [followerStats, setFollowerStats] = useState({ followers: 0, following: 0 });
+    const [isVerified, setIsVerified] = useState(false);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -39,6 +40,7 @@ export default function ProfileScreen() {
                 if (dbUser) {
                     setBio(dbUser.bio || '');
                     setAvatarUrl(dbUser.avatarUrl || user.imageUrl);
+                    setIsVerified(dbUser.isVerified || false);
                 }
 
                 // Fetch follower stats
@@ -100,9 +102,11 @@ export default function ProfileScreen() {
                                     source={resolveAvatar(avatarUrl || user?.imageUrl)}
                                     style={styles.avatar}
                                 />
-                                <View style={styles.verifiedBadge}>
-                                    <Ionicons name="checkmark" size={12} color="#050505" />
-                                </View>
+                                {isVerified && (
+                                    <View style={styles.verifiedBadge}>
+                                        <Ionicons name="checkmark" size={12} color="#050505" />
+                                    </View>
+                                )}
                             </View>
 
                             <View style={styles.nameSection}>
