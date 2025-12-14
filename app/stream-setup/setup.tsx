@@ -1,4 +1,5 @@
 
+import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -12,14 +13,46 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { api } from '../../lib/api';
 
 export default function SetupScreen() {
     const router = useRouter();
+    const { user } = useUser();
     const [title, setTitle] = useState('');
     const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
     const [micVolume, setMicVolume] = useState(80); // 0-100
     const [deviceVolume, setDeviceVolume] = useState(60); // 0-100
     const [storeVods, setStoreVods] = useState(true);
+    const [isCreatingStream, setIsCreatingStream] = useState(false);
+
+    const handleGoLive = async () => {
+        if (!user || !title.trim()) {
+            alert('Please enter a stream title');
+            return;
+        }
+
+        setIsCreatingStream(true);
+        try {
+            const roomName = `stream_${user.id}_${Date.now()}`;
+            const stream = await api.createStream({
+                userId: user.id,
+                title: title.trim(),
+                category: 'IRL',
+                status: 'live',
+                livekitRoomName: roomName,
+            });
+
+            router.push({
+                pathname: '/stream/broadcast',
+                params: { roomName, streamId: stream.id, streamTitle: title },
+            });
+        } catch (error) {
+            console.error('Failed to create stream:', error);
+            alert('Failed to start stream. Please try again.');
+        } finally {
+            setIsCreatingStream(false);
+        }
+    };
 
     // Mock Slider Component simply visualizes value for now
     const RenderSlider = ({ value, label, icon }: { value: number, label: string, icon: keyof typeof Ionicons.glyphMap }) => (
@@ -165,8 +198,14 @@ export default function SetupScreen() {
 
             {/* Fixed Footer */}
             <View style={styles.footer}>
-                <TouchableOpacity style={styles.goLiveButton} onPress={() => alert('Starting Stream...')}>
-                    <Text style={styles.goLiveText}>Go Live</Text>
+                <TouchableOpacity
+                    style={[styles.goLiveButton, isCreatingStream && { opacity: 0.6 }]}
+                    onPress={handleGoLive}
+                    disabled={isCreatingStream}
+                >
+                    <Text style={styles.goLiveText}>
+                        {isCreatingStream ? 'Starting...' : 'Go Live'}
+                    </Text>
                 </TouchableOpacity>
             </View>
 
