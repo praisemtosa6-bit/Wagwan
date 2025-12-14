@@ -30,6 +30,7 @@ export default function ProfileScreen() {
     // ...
     const [bio, setBio] = useState('');
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [followerStats, setFollowerStats] = useState({ followers: 0, following: 0 });
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -39,6 +40,10 @@ export default function ProfileScreen() {
                     setBio(dbUser.bio || '');
                     setAvatarUrl(dbUser.avatarUrl || user.imageUrl);
                 }
+
+                // Fetch follower stats
+                const stats = await api.getUserStats(user.id);
+                setFollowerStats(stats);
             }
         };
         fetchUser();
@@ -123,11 +128,11 @@ export default function ProfileScreen() {
                     <SignedIn>
                         {/* Stats Row */}
                         <View style={styles.statsRow}>
-                            {renderStat('Followers', '125K')}
+                            {renderStat('Followers', followerStats.followers.toString())}
                             <View style={styles.statDivider} />
-                            {renderStat('Following', '42')}
+                            {renderStat('Following', followerStats.following.toString())}
                             <View style={styles.statDivider} />
-                            {renderStat('Subs', '1.2K')}
+                            {renderStat('Subs', '0')}
                         </View>
 
                         {/* Main Actions */}
