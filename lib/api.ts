@@ -54,5 +54,30 @@ export const api = {
     createStream: async (stream: Partial<Stream>) => {
         // Implement later
     },
+
+    // Follow endpoints
+    followUser: async (followerId: string, followingId: string) => {
+        const res = await fetch(`${API_URL}/follows`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ followerId, followingId }),
+        });
+        return res.json();
+    },
+
+    unfollowUser: async (followerId: string, followingId: string) => {
+        const res = await fetch(`${API_URL}/follows`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ followerId, followingId }),
+        });
+        return res.json();
+    },
+
+    checkFollowStatus: async (followerId: string, followingId: string): Promise<{ isFollowing: boolean }> => {
+        const res = await fetch(`${API_URL}/follows/${followerId}/${followingId}`);
+        return res.json();
+    },
+
     getApiUrl: () => API_URL
 };

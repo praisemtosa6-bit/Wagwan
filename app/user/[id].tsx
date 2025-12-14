@@ -33,7 +33,21 @@ export default function PublicProfileScreen() {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            if (typeof id === 'string') {
+            if (typeof id === 'string' && currentUser) {
+                try {
+                    const data = await api.getUser(id);
+                    setProfileUser(data);
+
+                    // Check if current user is following this profile
+                    const followStatus = await api.checkFollowStatus(currentUser.id, id);
+                    setIsFollowing(followStatus.isFollowing);
+                } catch (err) {
+                    console.error("Failed to fetch user", err);
+                } finally {
+                    setLoading(false);
+                }
+            } else if (typeof id === 'string') {
+                // Not logged in, just fetch profile
                 try {
                     const data = await api.getUser(id);
                     setProfileUser(data);
@@ -45,7 +59,23 @@ export default function PublicProfileScreen() {
             }
         };
         fetchProfile();
-    }, [id]);
+    }, [id, currentUser]);
+
+    const toggleFollow = async () => {
+        if (!currentUser || !profileUser) return;
+
+        try {
+            if (isFollowing) {
+                await api.unfollowUser(currentUser.id, profileUser.id);
+                setIsFollowing(false);
+            } else {
+                await api.followUser(currentUser.id, profileUser.id);
+                setIsFollowing(true);
+            }
+        } catch (error) {
+            console.error('Failed to toggle follow:', error);
+        }
+    };
 
     const renderStat = (label: string, value: string) => (
         <View style={styles.statItem}>
@@ -142,7 +172,7 @@ export default function PublicProfileScreen() {
                     <View style={styles.actionButtonsRow}>
                         <TouchableOpacity
                             style={[styles.followButton, isFollowing && styles.followingButton]}
-                            onPress={() => setIsFollowing(!isFollowing)}
+                            onPress={toggleFollow}
                         >
                             <Text style={[styles.followButtonText, isFollowing && styles.followingButtonText]}>
                                 {isFollowing ? 'Following' : 'Follow'}

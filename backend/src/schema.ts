@@ -8,6 +8,7 @@ export const users = pgTable('users', {
     avatarUrl: text('avatar_url'),
     bio: text('bio'),
     isStreamer: boolean('is_streamer').default(false),
+    isVerified: boolean('is_verified').default(false),
     createdAt: timestamp('created_at').defaultNow(),
 });
 
