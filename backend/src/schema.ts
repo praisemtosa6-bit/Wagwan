@@ -20,6 +20,7 @@ export const streams = pgTable('streams', {
     status: text('status', { enum: ['live', 'offline'] }).default('offline'),
     viewerCount: integer('viewer_count').default(0),
     thumbnailUrl: text('thumbnail_url'),
+    livekitRoomName: text('livekit_room_name'),
     createdAt: timestamp('created_at').defaultNow(),
 });
 

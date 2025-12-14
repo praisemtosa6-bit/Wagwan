@@ -51,9 +51,23 @@ export const api = {
         }
     },
 
-    // Stream endpoints (placeholder)
-    createStream: async (stream: Partial<Stream>) => {
-        // Implement later
+    // Stream endpoints
+    createStream: async (stream: Partial<Stream> & { livekitRoomName?: string }) => {
+        const res = await fetch(`${API_URL}/streams`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(stream),
+        });
+        return res.json();
+    },
+
+    getLivekitToken: async (userId: string, username: string, roomName: string, isPublisher: boolean = false): Promise<{ token: string; roomName: string }> => {
+        const res = await fetch(`${API_URL}/streams/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, username, roomName, isPublisher }),
+        });
+        return res.json();
     },
 
     // Follow endpoints

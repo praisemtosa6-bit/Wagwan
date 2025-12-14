@@ -165,6 +165,40 @@ app.get('/users/:id/stats', async (c) => {
         return c.json({ error: 'Failed to fetch user stats' }, 500);
     }
 });
+});
+
+// LiveKit token generation
+import { AccessToken } from 'livekit-server-sdk';
+
+app.post('/streams/token', async (c) => {
+    const { userId, username, roomName, isPublisher } = await c.req.json();
+
+    if (!userId || !username || !roomName) {
+        return c.json({ error: 'Missing required fields' }, 400);
+    }
+
+    try {
+        const at = new AccessToken(
+            process.env.LIVEKIT_API_KEY,
+            process.env.LIVEKIT_API_SECRET,
+            { identity: userId, name: username }
+        );
+
+        at.addGrant({
+            room: roomName,
+            roomJoin: true,
+            canPublish: isPublisher || false,
+            canSubscribe: true,
+        });
+
+        const token = await at.toJwt();
+
+        return c.json({ token, roomName });
+    } catch (error) {
+        console.error('Error generating LiveKit token:', error);
+        return c.json({ error: 'Failed to generate token' }, 500);
+    }
+});
 
 
 export default app;
