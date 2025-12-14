@@ -157,7 +157,7 @@ export default function PublicProfileScreen() {
                                 source={resolveAvatar(profileUser.avatarUrl)}
                                 style={styles.avatar}
                             />
-                            {profileUser.isStreamer && (
+                            {profileUser.isVerified && (
                                 <View style={styles.verifiedBadge}>
                                     <Ionicons name="checkmark" size={12} color="#050505" />
                                 </View>
