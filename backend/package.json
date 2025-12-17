@@ -6,7 +6,8 @@
         "deploy": "wrangler deploy --minify src/index.ts",
         "generate": "drizzle-kit generate:pg",
         "db:push": "drizzle-kit push:pg",
-        "migrate": "drizzle-kit migrate"
+        "migrate": "drizzle-kit migrate",
+        "add-livekit-column": "tsx scripts/add-livekit-column.ts"
     },
     "dependencies": {
         "@hono/node-server": "^1.19.7",

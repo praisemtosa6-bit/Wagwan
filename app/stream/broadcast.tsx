@@ -1,6 +1,7 @@
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
-import { Room, VideoView, useLocalParticipant } from '@livekit/react-native';
+import { VideoView, useLocalParticipant } from '@livekit/react-native';
+import { Room } from 'livekit-client';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -38,7 +39,8 @@ export default function BroadcastScreen() {
                 );
 
                 // Connect to room
-                await room.connect(process.env.EXPO_PUBLIC_LIVEKIT_URL || 'wss://wagwan-rf66fz84.livekit.cloud', token);
+                const wsUrl = process.env.EXPO_PUBLIC_LIVEKIT_URL || 'wss://wagwan-rf66fz84.livekit.cloud';
+                await room.connect(wsUrl, token);
 
                 // Enable camera and microphone
                 await room.localParticipant.setCameraEnabled(true);
@@ -55,9 +57,11 @@ export default function BroadcastScreen() {
         connect();
 
         return () => {
-            room.disconnect();
+            if (room && room.state !== 'disconnected') {
+                room.disconnect();
+            }
         };
-    }, [user, roomName]);
+    }, [user, roomName, room]);
 
     const toggleMute = async () => {
         if (microphonePublication) {
