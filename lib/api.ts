@@ -73,14 +73,20 @@ export const api = {
 
     // Stream endpoints
     createStream: async (stream: Partial<Stream> & { livekitRoomName?: string }) => {
+        console.log('Creating stream with data:', stream);
+        console.log('API URL:', `${API_URL}/streams`);
+        
         const res = await fetch(`${API_URL}/streams`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(stream),
         });
         
+        console.log('Stream creation response status:', res.status);
+        
         if (!res.ok) {
             const text = await res.text();
+            console.log('Stream creation error response:', text);
             let errorMessage = 'Failed to create stream';
             try {
                 const error = JSON.parse(text);
@@ -88,10 +94,12 @@ export const api = {
             } catch {
                 errorMessage = text || errorMessage;
             }
-            throw new Error(errorMessage);
+            throw new Error(`${errorMessage} (Status: ${res.status})`);
         }
         
-        return res.json();
+        const result = await res.json();
+        console.log('Stream creation success:', result);
+        return result;
     },
 
     getLivekitToken: async (userId: string, username: string, roomName: string, isPublisher: boolean = false): Promise<{ token: string; roomName: string }> => {

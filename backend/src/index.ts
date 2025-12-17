@@ -191,13 +191,26 @@ app.get('/users/:id/stats', async (c) => {
 
 // Create Stream
 app.post('/streams', async (c) => {
-    const { userId, title, category, status, livekitRoomName } = await c.req.json();
-
-    if (!userId || !title) {
-        return c.json({ error: 'Missing required fields' }, 400);
-    }
-
     try {
+        const body = await c.req.json();
+        console.log('Received stream creation request:', body);
+        
+        const { userId, title, category, status, livekitRoomName } = body;
+
+        if (!userId || !title) {
+            console.log('Missing required fields - userId:', userId, 'title:', title);
+            return c.json({ error: 'Missing required fields: userId and title are required' }, 400);
+        }
+
+        console.log('Inserting stream with values:', {
+            userId,
+            title,
+            category: category || null,
+            status: (status as 'live' | 'offline') || 'live',
+            livekitRoomName: livekitRoomName || null,
+            viewerCount: 0,
+        });
+
         const result = await db.insert(streams).values({
             userId,
             title,
@@ -207,10 +220,15 @@ app.post('/streams', async (c) => {
             viewerCount: 0,
         }).returning();
 
+        console.log('Stream created successfully:', result[0]);
         return c.json(result[0]);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating stream:', error);
-        return c.json({ error: 'Failed to create stream' }, 500);
+        console.error('Error details:', error?.message, error?.stack);
+        return c.json({ 
+            error: 'Failed to create stream', 
+            details: error?.message || String(error) 
+        }, 500);
     }
 });
 
