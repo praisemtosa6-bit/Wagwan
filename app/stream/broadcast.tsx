@@ -23,7 +23,7 @@ export default function BroadcastScreen() {
     const [isMuted, setIsMuted] = useState(false);
     const [isCameraOff, setIsCameraOff] = useState(false);
 
-    const { cameraPublication, microphonePublication } = useLocalParticipant(room);
+    const { cameraTrack, microphoneTrack } = useLocalParticipant({ room });
 
     useEffect(() => {
         const connect = async () => {
@@ -64,14 +64,14 @@ export default function BroadcastScreen() {
     }, [user, roomName, room]);
 
     const toggleMute = async () => {
-        if (microphonePublication) {
+        if (microphoneTrack) {
             await room.localParticipant.setMicrophoneEnabled(isMuted);
             setIsMuted(!isMuted);
         }
     };
 
     const toggleCamera = async () => {
-        if (cameraPublication) {
+        if (cameraTrack) {
             await room.localParticipant.setCameraEnabled(isCameraOff);
             setIsCameraOff(!isCameraOff);
         }
@@ -96,10 +96,10 @@ export default function BroadcastScreen() {
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* Camera Preview */}
             <View style={styles.videoContainer}>
-                {cameraPublication && (
+                {cameraTrack?.track && (
                     <VideoView
                         style={styles.video}
-                        videoTrack={cameraPublication.track}
+                        videoTrack={cameraTrack.track}
                         mirror={true}
                     />
                 )}

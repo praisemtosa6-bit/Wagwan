@@ -1,13 +1,19 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ClerkLoaded, ClerkProvider, useUser } from '@clerk/clerk-expo';
+import { registerGlobals } from '@livekit/react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import 'react-native-reanimated';
 import { api } from '../lib/api';
 import { getRandomAvatarId } from '../lib/avatars';
 import { tokenCache } from '../lib/tokenCache';
+
+if (Platform.OS !== 'web') {
+  registerGlobals();
+}
 
 export const unstable_settings = {
   anchor: '(tabs)',
