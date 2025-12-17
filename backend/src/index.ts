@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { eq, ilike } from 'drizzle-orm';
+import { eq, ilike, or } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { db } from './db';
@@ -68,7 +68,12 @@ app.get('/users/search', async (c) => {
         const results = await db
             .select()
             .from(users)
-            .where(ilike(users.username, `%${query}%`))
+            .where(
+                or(
+                    ilike(users.username, `%${query}%`),
+                    ilike(users.email, `%${query}%`),
+                ),
+            )
             .limit(10);
 
         return c.json(results);

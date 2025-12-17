@@ -67,9 +67,8 @@ export default function BrowseScreen() {
         try {
             const results = await api.searchUsers(text);
             console.log('Search results:', results);
-            // Filter out yourself from results
-            const filtered = user ? results.filter((u) => u.id !== user.id) : results;
-            setSearchResults(filtered);
+            // Keep yourself in results (useful for confirming search works), but disable follow in UI
+            setSearchResults(results);
         } catch (error) {
             console.error('Search error:', error);
             setSearchResults([]);
@@ -116,6 +115,10 @@ export default function BrowseScreen() {
     const toggleFollow = async (targetUserId: string) => {
         if (!user) {
             alert('Please log in to follow users.');
+            return;
+        }
+
+        if (targetUserId === user.id) {
             return;
         }
 
@@ -213,6 +216,7 @@ export default function BrowseScreen() {
     );
 
     const renderSearchResult = ({ item }: { item: User }) => {
+        const isMe = !!user && item.id === user.id;
         const isFollowing = !!followStatus[item.id];
         const isLoading = !!followLoading[item.id];
 
@@ -233,20 +237,27 @@ export default function BrowseScreen() {
                             {item.isVerified && (
                                 <Ionicons name="checkmark-circle" size={16} color="#8A2BE2" style={{ marginLeft: 6 }} />
                             )}
+                            {isMe && (
+                                <View style={styles.youPill}>
+                                    <Text style={styles.youPillText}>You</Text>
+                                </View>
+                            )}
                         </View>
                         <Text style={styles.resultUsername}>@{item.username}</Text>
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={[styles.followAction, isFollowing && styles.followActionFollowing, isLoading && { opacity: 0.6 }]}
-                    onPress={() => toggleFollow(item.id)}
-                    disabled={isLoading || !user}
-                >
-                    <Text style={[styles.followActionText, isFollowing && styles.followActionTextFollowing]}>
-                        {isLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
-                    </Text>
-                </TouchableOpacity>
+                {!isMe && (
+                    <TouchableOpacity
+                        style={[styles.followAction, isFollowing && styles.followActionFollowing, isLoading && { opacity: 0.6 }]}
+                        onPress={() => toggleFollow(item.id)}
+                        disabled={isLoading || !user}
+                    >
+                        <Text style={[styles.followActionText, isFollowing && styles.followActionTextFollowing]}>
+                            {isLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
             </View>
         );
     };
@@ -379,6 +390,20 @@ const styles = StyleSheet.create({
     resultNameRow: {
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    youPill: {
+        marginLeft: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 999,
+        backgroundColor: '#1f1f23',
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    youPillText: {
+        color: '#adadb8',
+        fontSize: 12,
+        fontWeight: '700',
     },
     resultName: {
         color: 'white',
