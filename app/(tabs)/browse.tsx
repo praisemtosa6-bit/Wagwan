@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useUser } from '@clerk/clerk-expo';
 import { ResizeMode, Video } from 'expo-av';
-import { Link } from 'expo-router';
-import React, { useState } from 'react';
+import { Link, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, Image, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api, User } from '../../lib/api';
@@ -42,28 +43,100 @@ const LIVE_CHANNELS = [
 ];
 
 export default function BrowseScreen() {
+    const router = useRouter();
+    const { user } = useUser();
     const [activeTab, setActiveTab] = useState('Categories');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const [followStatus, setFollowStatus] = useState<Record<string, boolean>>({});
+    const [followLoading, setFollowLoading] = useState<Record<string, boolean>>({});
 
     const handleSearch = async (text: string) => {
         setSearchQuery(text);
         if (text.length < 2) {
             setSearchResults([]);
+            setSearchError(null);
             return;
         }
 
         setIsSearching(true);
+        setSearchError(null);
         console.log('Searching for:', text);
         try {
             const results = await api.searchUsers(text);
             console.log('Search results:', results);
-            setSearchResults(results);
+            // Filter out yourself from results
+            const filtered = user ? results.filter((u) => u.id !== user.id) : results;
+            setSearchResults(filtered);
         } catch (error) {
             console.error('Search error:', error);
+            setSearchResults([]);
+            setSearchError(error instanceof Error ? error.message : String(error));
         } finally {
             setIsSearching(false);
+        }
+    };
+
+    // Refresh follow status for visible search results
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            if (!user) return;
+            if (searchResults.length === 0) return;
+
+            try {
+                const statuses = await Promise.all(
+                    searchResults.map(async (u) => {
+                        const res = await api.checkFollowStatus(user.id, u.id);
+                        return [u.id, res.isFollowing] as const;
+                    })
+                );
+
+                if (cancelled) return;
+                setFollowStatus((prev) => {
+                    const next = { ...prev };
+                    for (const [id, isFollowing] of statuses) {
+                        next[id] = isFollowing;
+                    }
+                    return next;
+                });
+            } catch (e) {
+                // Non-fatal; still allow user to tap Follow and create state
+                console.log('Failed to prefetch follow statuses:', e);
+            }
+        };
+        load();
+        return () => {
+            cancelled = true;
+        };
+    }, [user, searchResults]);
+
+    const toggleFollow = async (targetUserId: string) => {
+        if (!user) {
+            alert('Please log in to follow users.');
+            return;
+        }
+
+        if (followLoading[targetUserId]) return;
+
+        const currentlyFollowing = !!followStatus[targetUserId];
+        setFollowLoading((p) => ({ ...p, [targetUserId]: true }));
+
+        try {
+            if (currentlyFollowing) {
+                await api.unfollowUser(user.id, targetUserId);
+                setFollowStatus((p) => ({ ...p, [targetUserId]: false }));
+            } else {
+                await api.followUser(user.id, targetUserId);
+                setFollowStatus((p) => ({ ...p, [targetUserId]: true }));
+            }
+        } catch (e) {
+            console.error('Follow toggle failed:', e);
+            alert(`Failed to ${currentlyFollowing ? 'unfollow' : 'follow'} user`);
+        } finally {
+            setFollowLoading((p) => ({ ...p, [targetUserId]: false }));
         }
     };
 
@@ -139,23 +212,44 @@ export default function BrowseScreen() {
         </Link>
     );
 
-    const renderSearchResult = ({ item }: { item: any }) => (
-        <Link href={`/user/${item.id}`} asChild>
-            <TouchableOpacity style={styles.resultItem}>
-                <Image
-                    source={item.avatarUrl ? { uri: item.avatarUrl } : require('../../assets/images/pfp/pfp.png')}
-                    style={styles.resultAvatar}
-                />
-                <View style={styles.resultInfo}>
-                    <Text style={styles.resultName}>{item.fullName || item.username}</Text>
-                    <Text style={styles.resultUsername}>@{item.username}</Text>
-                </View>
-                {item.isVerified && (
-                    <Ionicons name="checkmark-circle" size={16} color="#8A2BE2" />
-                )}
-            </TouchableOpacity>
-        </Link>
-    );
+    const renderSearchResult = ({ item }: { item: User }) => {
+        const isFollowing = !!followStatus[item.id];
+        const isLoading = !!followLoading[item.id];
+
+        return (
+            <View style={styles.resultItem}>
+                <TouchableOpacity
+                    style={styles.resultMain}
+                    activeOpacity={0.8}
+                    onPress={() => router.push(`/user/${item.id}`)}
+                >
+                    <Image
+                        source={item.avatarUrl ? { uri: item.avatarUrl } : require('../../assets/images/pfp/pfp.png')}
+                        style={styles.resultAvatar}
+                    />
+                    <View style={styles.resultInfo}>
+                        <View style={styles.resultNameRow}>
+                            <Text style={styles.resultName}>{item.username}</Text>
+                            {item.isVerified && (
+                                <Ionicons name="checkmark-circle" size={16} color="#8A2BE2" style={{ marginLeft: 6 }} />
+                            )}
+                        </View>
+                        <Text style={styles.resultUsername}>@{item.username}</Text>
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.followAction, isFollowing && styles.followActionFollowing, isLoading && { opacity: 0.6 }]}
+                    onPress={() => toggleFollow(item.id)}
+                    disabled={isLoading || !user}
+                >
+                    <Text style={[styles.followActionText, isFollowing && styles.followActionTextFollowing]}>
+                        {isLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -213,7 +307,9 @@ export default function BrowseScreen() {
                             renderItem={renderSearchResult}
                             keyExtractor={(item) => item.id}
                             ListEmptyComponent={
-                                <Text style={styles.emptyText}>No users found</Text>
+                                <Text style={styles.emptyText}>
+                                    {searchError ? `Search failed: ${searchError}` : 'No users found'}
+                                </Text>
                             }
                         />
                     )}
@@ -265,6 +361,11 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#1f1f23',
     },
+    resultMain: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     resultAvatar: {
         width: 40,
         height: 40,
@@ -275,6 +376,10 @@ const styles = StyleSheet.create({
     resultInfo: {
         flex: 1,
     },
+    resultNameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     resultName: {
         color: 'white',
         fontWeight: '600',
@@ -283,6 +388,26 @@ const styles = StyleSheet.create({
     resultUsername: {
         color: '#888',
         fontSize: 14,
+    },
+    followAction: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        backgroundColor: '#8A2BE2',
+        marginLeft: 10,
+    },
+    followActionFollowing: {
+        backgroundColor: '#1f1f23',
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    followActionText: {
+        color: 'white',
+        fontWeight: '700',
+        fontSize: 12,
+    },
+    followActionTextFollowing: {
+        color: '#f0ede4',
     },
     emptyText: {
         color: '#666',

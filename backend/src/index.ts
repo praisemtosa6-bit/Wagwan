@@ -45,6 +45,39 @@ app.post('/users', async (c) => {
     }
 });
 
+// List users (useful for debugging/admin)
+app.get('/users', async (c) => {
+    try {
+        const results = await db.select().from(users).limit(50);
+        return c.json(results);
+    } catch (error) {
+        console.error('Error listing users:', error);
+        return c.json({ error: 'Failed to list users' }, 500);
+    }
+});
+
+// Search users (must be registered before /users/:id)
+app.get('/users/search', async (c) => {
+    const query = c.req.query('q');
+
+    if (!query || query.length < 2) {
+        return c.json([]);
+    }
+
+    try {
+        const results = await db
+            .select()
+            .from(users)
+            .where(ilike(users.username, `%${query}%`))
+            .limit(10);
+
+        return c.json(results);
+    } catch (error) {
+        console.error('Error searching users:', error);
+        return c.json({ error: 'Failed to search users' }, 500);
+    }
+});
+
 // Get User by ID
 app.get('/users/:id', async (c) => {
     const id = c.req.param('id');
@@ -134,31 +167,6 @@ app.get('/follows/:followerId/:followingId', async (c) => {
     } catch (error) {
         console.error('Error checking follow status:', error);
         return c.json({ error: 'Failed to check follow status' }, 500);
-    }
-});
-
-// Get follower/following counts for a user
-// Search users
-app.get('/users/search', async (c) => {
-    const query = c.req.query('q');
-
-    if (!query || query.length < 2) {
-        return c.json([]);
-    }
-
-    // ... (in the file)
-
-    try {
-        const results = await db.select().from(users)
-            .where(
-                ilike(users.username, `%${query}%`)
-            )
-            .limit(10);
-
-        return c.json(results);
-    } catch (error) {
-        console.error('Error searching users:', error);
-        return c.json({ error: 'Failed to search users' }, 500);
     }
 });
 
