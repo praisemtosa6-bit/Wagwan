@@ -310,7 +310,9 @@ export default function BrowseScreen() {
             {/* Content */}
             {searchQuery ? (
                 <View style={styles.searchResultsContainer}>
-                    {isSearching ? (
+                    {searchQuery.length < 2 ? (
+                        <Text style={styles.emptyText}>Type at least 2 characters</Text>
+                    ) : isSearching ? (
                         <ActivityIndicator color="#f0ede4" style={{ marginTop: 20 }} />
                     ) : (
                         <FlatList
