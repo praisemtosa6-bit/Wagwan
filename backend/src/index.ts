@@ -1,10 +1,9 @@
-
 import 'dotenv/config';
-import { eq } from 'drizzle-orm';
+import { eq, ilike } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { db } from './db';
-import { users } from './schema';
+import { streams, users } from './schema';
 
 const app = new Hono();
 
@@ -139,6 +138,30 @@ app.get('/follows/:followerId/:followingId', async (c) => {
 });
 
 // Get follower/following counts for a user
+// Search users
+app.get('/users/search', async (c) => {
+    const query = c.req.query('q');
+
+    if (!query || query.length < 2) {
+        return c.json([]);
+    }
+
+    // ... (in the file)
+
+    try {
+        const results = await db.select().from(users)
+            .where(
+                ilike(users.username, `%${query}%`)
+            )
+            .limit(10);
+
+        return c.json(results);
+    } catch (error) {
+        console.error('Error searching users:', error);
+        return c.json({ error: 'Failed to search users' }, 500);
+    }
+});
+
 app.get('/users/:id/stats', async (c) => {
     const userId = c.req.param('id');
 
@@ -163,6 +186,31 @@ app.get('/users/:id/stats', async (c) => {
     } catch (error) {
         console.error('Error fetching user stats:', error);
         return c.json({ error: 'Failed to fetch user stats' }, 500);
+    }
+});
+
+// Create Stream
+app.post('/streams', async (c) => {
+    const { userId, title, category, status, livekitRoomName } = await c.req.json();
+
+    if (!userId || !title) {
+        return c.json({ error: 'Missing required fields' }, 400);
+    }
+
+    try {
+        const result = await db.insert(streams).values({
+            userId,
+            title,
+            category: category || null,
+            status: (status as 'live' | 'offline') || 'live',
+            livekitRoomName: livekitRoomName || null,
+            viewerCount: 0,
+        }).returning();
+
+        return c.json(result[0]);
+    } catch (error) {
+        console.error('Error creating stream:', error);
+        return c.json({ error: 'Failed to create stream' }, 500);
     }
 });
 

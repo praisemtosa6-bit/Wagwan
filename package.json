@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.19.11",
+    "@config-plugins/react-native-webrtc": "^13.0.0",
     "@expo/vector-icons": "^15.0.3",
     "@livekit/react-native": "^2.9.6",
     "@livekit/react-native-webrtc": "^137.0.2",
@@ -23,8 +24,10 @@
     "@supabase/supabase-js": "^2.87.1",
     "expo": "~54.0.27",
     "expo-av": "^16.0.8",
+    "expo-build-properties": "~1.0.10",
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.11",
+    "expo-dev-client": "~6.0.20",
     "expo-font": "~14.0.10",
     "expo-haptics": "~15.0.8",
     "expo-image": "~3.0.11",
@@ -50,6 +53,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "eas-cli": "^16.28.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"

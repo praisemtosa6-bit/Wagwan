@@ -51,6 +51,26 @@ export const api = {
         }
     },
 
+    searchUsers: async (query: string): Promise<User[]> => {
+        if (!query || query.length < 2) return [];
+        console.log('API searching for:', query);
+        console.log('API URL:', API_URL);
+        try {
+            const response = await fetch(`${API_URL}/users/search?q=${encodeURIComponent(query)}`);
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('API Error:', response.status, text);
+                throw new Error('Failed to search users');
+            }
+            const data = await response.json();
+            console.log('API Data:', data);
+            return data;
+        } catch (error) {
+            console.error('API Network Error:', error);
+            throw error;
+        }
+    },
+
     // Stream endpoints
     createStream: async (stream: Partial<Stream> & { livekitRoomName?: string }) => {
         const res = await fetch(`${API_URL}/streams`, {
@@ -58,6 +78,19 @@ export const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(stream),
         });
+        
+        if (!res.ok) {
+            const text = await res.text();
+            let errorMessage = 'Failed to create stream';
+            try {
+                const error = JSON.parse(text);
+                errorMessage = error.error || errorMessage;
+            } catch {
+                errorMessage = text || errorMessage;
+            }
+            throw new Error(errorMessage);
+        }
+        
         return res.json();
     },
 

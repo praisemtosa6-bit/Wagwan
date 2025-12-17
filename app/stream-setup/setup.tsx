@@ -1,8 +1,7 @@
-
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -18,6 +17,12 @@ import { api } from '../../lib/api';
 export default function SetupScreen() {
     const router = useRouter();
     const { user } = useUser();
+
+    useEffect(() => {
+        console.log('SetupScreen Mounted');
+        // alert('Debug: Setup Screen Loaded'); 
+    }, []);
+
     const [title, setTitle] = useState('');
     const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
     const [micVolume, setMicVolume] = useState(80); // 0-100
@@ -26,14 +31,26 @@ export default function SetupScreen() {
     const [isCreatingStream, setIsCreatingStream] = useState(false);
 
     const handleGoLive = async () => {
-        if (!user || !title.trim()) {
+        console.log('handleGoLive called');
+
+        if (!user) {
+            console.log('User not found');
+            alert('Please log in first');
+            return;
+        }
+
+        if (!title.trim()) {
+            console.log('Title is empty');
             alert('Please enter a stream title');
             return;
         }
 
+        console.log('Starting stream creation...');
         setIsCreatingStream(true);
         try {
             const roomName = `stream_${user.id}_${Date.now()}`;
+            console.log('Generated room name:', roomName);
+
             const stream = await api.createStream({
                 userId: user.id,
                 title: title.trim(),
@@ -42,13 +59,25 @@ export default function SetupScreen() {
                 livekitRoomName: roomName,
             });
 
+            console.log('Stream created in DB:', stream);
+
+            if (!stream || !stream.id) {
+                throw new Error('Stream creation failed - no ID returned');
+            }
+
+            console.log('Navigating to broadcast screen...');
             router.push({
                 pathname: '/stream/broadcast',
-                params: { roomName, streamId: stream.id, streamTitle: title },
+                params: {
+                    roomName,
+                    streamId: stream.id,
+                    streamTitle: title
+                },
             });
         } catch (error) {
             console.error('Failed to create stream:', error);
-            alert('Failed to start stream. Please try again.');
+            // Show the actual error message
+            alert(`Failed to start stream: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             setIsCreatingStream(false);
         }
@@ -193,10 +222,23 @@ export default function SetupScreen() {
                     <Text style={styles.linkText}>Review streaming tips</Text>
                 </View>
 
-                <View style={{ height: 80 }} /> {/* Bottom padding for fixed button */}
+                <View style={{ height: 40 }} />
+
+                {/* Inline Button (Debug Fix) */}
+                <TouchableOpacity
+                    style={[styles.goLiveButton, isCreatingStream && { opacity: 0.6 }]}
+                    onPress={handleGoLive}
+                    disabled={isCreatingStream}
+                >
+                    <Text style={styles.goLiveText}>
+                        {isCreatingStream ? 'Starting...' : 'Go Live (Inline)'}
+                    </Text>
+                </TouchableOpacity>
+
+                <View style={{ height: 40 }} />
             </ScrollView>
 
-            {/* Fixed Footer */}
+            {/* Fixed Footer - Commented out for debugging
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={[styles.goLiveButton, isCreatingStream && { opacity: 0.6 }]}
@@ -208,6 +250,7 @@ export default function SetupScreen() {
                     </Text>
                 </TouchableOpacity>
             </View>
+            */}
 
         </SafeAreaView>
     );
@@ -399,6 +442,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#000',
         borderTopWidth: 1,
         borderTopColor: '#1f1f23',
+        zIndex: 100,
+        elevation: 5, // Android shadow/elevation
     },
     goLiveButton: {
         backgroundColor: '#8A2BE2', // Purple

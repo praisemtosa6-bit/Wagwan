@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { ResizeMode, Video } from 'expo-av';
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { Dimensions, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, FlatList, Image, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { api, User } from '../../lib/api';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 2;
@@ -42,6 +43,29 @@ const LIVE_CHANNELS = [
 
 export default function BrowseScreen() {
     const [activeTab, setActiveTab] = useState('Categories');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<User[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const handleSearch = async (text: string) => {
+        setSearchQuery(text);
+        if (text.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+        console.log('Searching for:', text);
+        try {
+            const results = await api.searchUsers(text);
+            console.log('Search results:', results);
+            setSearchResults(results);
+        } catch (error) {
+            console.error('Search error:', error);
+        } finally {
+            setIsSearching(false);
+        }
+    };
 
     const renderCategoryItem = ({ item }: { item: typeof CATEGORIES[0] }) => (
         <View style={styles.categoryCard}>
@@ -115,60 +139,109 @@ export default function BrowseScreen() {
         </Link>
     );
 
+    const renderSearchResult = ({ item }: { item: any }) => (
+        <Link href={`/user/${item.id}`} asChild>
+            <TouchableOpacity style={styles.resultItem}>
+                <Image
+                    source={item.avatarUrl ? { uri: item.avatarUrl } : require('../../assets/images/pfp/pfp.png')}
+                    style={styles.resultAvatar}
+                />
+                <View style={styles.resultInfo}>
+                    <Text style={styles.resultName}>{item.fullName || item.username}</Text>
+                    <Text style={styles.resultUsername}>@{item.username}</Text>
+                </View>
+                {item.isVerified && (
+                    <Ionicons name="checkmark-circle" size={16} color="#8A2BE2" />
+                )}
+            </TouchableOpacity>
+        </Link>
+    );
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <View style={styles.searchBar}>
+            <StatusBar barStyle="light-content" backgroundColor="#000000" />
+
+            {/* Search Header */}
+            <View style={[styles.searchContainer, { flexDirection: 'row', alignItems: 'center' }]}>
+                <View style={[styles.searchBar, { flex: 1, marginRight: 10 }]}>
                     <Ionicons name="search" size={20} color="#888" style={{ marginRight: 8 }} />
                     <TextInput
-                        placeholder="Search"
+                        placeholder="Search users..."
                         placeholderTextColor="#888"
                         style={styles.searchInput}
+                        value={searchQuery}
+                        onChangeText={handleSearch}
+                        returnKeyType="search"
                     />
-                </View>
-            </View>
-
-            {/* Category Tabs */}
-            <View style={styles.tabsHeader}>
-                <View style={styles.tabsRow}>
-                    <TouchableOpacity onPress={() => setActiveTab('Categories')} style={styles.tabButton}>
-                        <Text style={[styles.tabText, activeTab === 'Categories' && styles.tabTextActive]}>Categories</Text>
-                        {activeTab === 'Categories' && <View style={styles.activeIndicator} />}
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setActiveTab('Live Channels')} style={styles.tabButton}>
-                        <Text style={[styles.tabText, activeTab === 'Live Channels' && styles.tabTextActive]}>Live Channels</Text>
-                        {activeTab === 'Live Channels' && <View style={styles.activeIndicator} />}
-                    </TouchableOpacity>
                 </View>
                 <TouchableOpacity>
                     <Ionicons name="filter" size={20} color="#efeff1" />
                 </TouchableOpacity>
             </View>
 
-            {/* Content */}
-            {activeTab === 'Categories' ? (
-                <FlatList
-                    key="categories-grid"
-                    data={CATEGORIES}
-                    renderItem={renderCategoryItem}
-                    keyExtractor={(item) => item.id}
-                    numColumns={COLUMN_COUNT}
-                    contentContainerStyle={styles.gridContent}
-                    columnWrapperStyle={styles.gridRow}
-                    showsVerticalScrollIndicator={false}
-                />
-            ) : (
-                <FlatList
-                    key="live-channels-list"
-                    data={LIVE_CHANNELS}
-                    renderItem={renderLiveChannelItem}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContent}
-                    showsVerticalScrollIndicator={false}
-                />
+            {/* Tabs Header - Only show when not searching */}
+            {!searchQuery && (
+                <View style={styles.tabsHeader}>
+                    <View style={styles.tabsRow}>
+                        <TouchableOpacity
+                            style={styles.tabButton}
+                            onPress={() => setActiveTab('Categories')}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'Categories' && styles.tabTextActive]}>Categories</Text>
+                            {activeTab === 'Categories' && <View style={styles.activeIndicator} />}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.tabButton}
+                            onPress={() => setActiveTab('Live Channels')}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'Live Channels' && styles.tabTextActive]}>Live Channels</Text>
+                            {activeTab === 'Live Channels' && <View style={styles.activeIndicator} />}
+                        </TouchableOpacity>
+                    </View>
+                </View>
             )}
-        </SafeAreaView>
+
+            {/* Content */}
+            {searchQuery ? (
+                <View style={styles.searchResultsContainer}>
+                    {isSearching ? (
+                        <ActivityIndicator color="#f0ede4" style={{ marginTop: 20 }} />
+                    ) : (
+                        <FlatList
+                            data={searchResults}
+                            renderItem={renderSearchResult}
+                            keyExtractor={(item) => item.id}
+                            ListEmptyComponent={
+                                <Text style={styles.emptyText}>No users found</Text>
+                            }
+                        />
+                    )}
+                </View>
+            ) : (
+                activeTab === 'Categories' ? (
+                    <FlatList
+                        key="categories-grid"
+                        data={CATEGORIES}
+                        renderItem={renderCategoryItem}
+                        keyExtractor={(item) => item.id}
+                        numColumns={COLUMN_COUNT}
+                        contentContainerStyle={styles.gridContent}
+                        columnWrapperStyle={styles.gridRow}
+                        showsVerticalScrollIndicator={false}
+                    />
+                ) : (
+                    <FlatList
+                        key="live-channels-list"
+                        data={LIVE_CHANNELS}
+                        renderItem={renderLiveChannelItem}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.listContent}
+                        showsVerticalScrollIndicator={false}
+                    />
+                )
+            )}
+        </SafeAreaView >
     );
 }
 
@@ -176,6 +249,45 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000000',
+    },
+    content: {
+        flex: 1,
+    },
+    // Search Results
+    searchResultsContainer: {
+        flex: 1,
+        padding: 16,
+    },
+    resultItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#1f1f23',
+    },
+    resultAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginRight: 12,
+        backgroundColor: '#333',
+    },
+    resultInfo: {
+        flex: 1,
+    },
+    resultName: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 16,
+    },
+    resultUsername: {
+        color: '#888',
+        fontSize: 14,
+    },
+    emptyText: {
+        color: '#666',
+        textAlign: 'center',
+        marginTop: 20,
     },
     searchContainer: {
         paddingHorizontal: 16,
