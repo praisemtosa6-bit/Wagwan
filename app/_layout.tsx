@@ -81,6 +81,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="stream/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="stream-setup" options={{ headerShown: false }} />
+            <Stack.Screen name="user/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="auth" options={{ headerShown: false }} />
             <Stack.Screen name="messages" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />

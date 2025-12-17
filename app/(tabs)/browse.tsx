@@ -235,7 +235,7 @@ export default function BrowseScreen() {
                         <View style={styles.resultNameRow}>
                             <Text style={styles.resultName}>{item.username}</Text>
                             {item.isVerified && (
-                                <Ionicons name="checkmark-circle" size={16} color="#8A2BE2" style={{ marginLeft: 6 }} />
+                                <Ionicons name="checkmark-circle" size={16} color="#014743" style={{ marginLeft: 6 }} />
                             )}
                             {isMe && (
                                 <View style={styles.youPill}>
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
-        backgroundColor: '#8A2BE2',
+        backgroundColor: '#f0ede4', // Secondary (brand)
         marginLeft: 10,
     },
     followActionFollowing: {
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
         borderColor: '#333',
     },
     followActionText: {
-        color: 'white',
+        color: '#014743', // Primary (brand)
         fontWeight: '700',
         fontSize: 12,
     },
