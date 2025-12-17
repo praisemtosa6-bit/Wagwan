@@ -73,7 +73,7 @@ export default function PickCategoryScreen() {
                     <Text style={styles.closeText}>Cancel</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Choose Category</Text>
-                <View style={{ width: 60 }} /> {/* Spacer to center title */}
+                <View style={styles.headerSpacer} />
             </View>
 
             {/* Search & Prompt */}
@@ -143,6 +143,9 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    headerSpacer: {
+        width: 60,
     },
     searchSection: {
         padding: 16,
